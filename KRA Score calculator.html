@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KRA Score Calculator</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;
+  --primary:#2563eb;--primary-dark:#1d4ed8;--soft:#eff6ff;--success:#15803d;
+  --danger:#b42318;--shadow:0 8px 28px rgba(16,24,40,.07);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 240px,var(--bg) 100%);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{width:min(1180px,100%);margin:0 auto;padding:28px 20px 44px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:20px}
+.brand h1{margin:0;font-size:clamp(24px,4vw,34px);letter-spacing:-.7px}
+.sub{color:var(--muted);margin-top:6px;font-size:14px}
+.badge{padding:10px 16px;border-radius:999px;background:#fff;border:1px solid #dbe5f5;
+box-shadow:0 4px 14px rgba(37,99,235,.08);font-weight:800;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;
+margin-bottom:18px;box-shadow:var(--shadow)}
+.card h2,.card h3{margin:0}
+.setup-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:15px}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+font-weight:800;margin:0 0 6px}
+input,select{width:100%;padding:10px 11px;border:1px solid #d0d5dd;border-radius:9px;
+background:#fff;color:var(--text);outline:none;transition:.15s}
+input:focus,select:focus{border-color:#84aefb;box-shadow:0 0 0 3px #dbeafe}
+.note{font-size:12px;color:var(--muted);line-height:1.55;margin:14px 0 0}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.section-score{font-size:22px;font-weight:900;color:var(--primary)}
+.table-wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{border-bottom:1px solid #eaecf0;padding:10px;text-align:left;font-size:13px;vertical-align:middle}
+th{background:#f8fafc;color:#475467;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:235px}
+.score{font-weight:900;white-space:nowrap;color:var(--primary)}
+.row-remove{border:0;background:#fff1f0;color:var(--danger);width:32px;height:32px;border-radius:8px;font-weight:900}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:10px;padding:10px 14px;font-weight:800;transition:transform .12s,box-shadow .12s}
+button:active{transform:translateY(1px)}
+.primary{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.2)}
+.primary:hover{background:var(--primary-dark)}
+.secondary{background:#f2f4f7;color:#344054}
+.secondary:hover{background:#e9edf3}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:15px}
+.metric{padding:17px;border:1px solid var(--line);background:#f8fafc;border-radius:13px}
+.metric label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:800}
+.num{font-size:clamp(22px,4vw,30px);font-weight:900;margin-top:6px}
+.progress{height:11px;background:#e9edf3;border-radius:99px;overflow:hidden;margin-top:17px}
+.fill{height:100%;width:0;background:var(--primary);border-radius:99px;transition:width .25s}
+.footer-note{text-align:center;color:#98a2b3;font-size:11px;margin-top:22px}
+@media(max-width:900px){
+  .setup-grid{grid-template-columns:repeat(3,1fr)}
+  .wrap{padding:22px 16px 36px}
+}
+@media(max-width:620px){
+  .wrap{padding:16px 12px 30px}
+  .top{align-items:flex-start;flex-direction:column}
+  .badge{width:100%;text-align:center}
+  .card{padding:15px;border-radius:14px;margin-bottom:13px}
+  .setup-grid{grid-template-columns:1fr 1fr}
+  .summary{grid-template-columns:1fr}
+  .section-head{align-items:flex-start}
+  .section-score{font-size:18px}
+  .actions button{flex:1;min-width:135px}
+  /* Mobile converts each KRA table row into a compact card. */
+  .table-wrap{border:0;overflow:visible}
+  table{min-width:0;width:100%}
+  thead{display:none}
+  tbody,tr,td{display:block;width:100%}
+  tr{position:relative;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:10px;background:#fff}
+  td{border:0!important;padding:5px 0}
+  td:first-child{min-width:0}
+  td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(5),td:nth-child(6){
+    display:grid;grid-template-columns:82px 1fr;align-items:center;gap:8px
+  }
+  td:nth-child(2)::before{content:"MAX"}
+  td:nth-child(3)::before{content:"TARGET"}
+  td:nth-child(4)::before{content:"MIN"}
+  td:nth-child(5)::before{content:"ACTUAL"}
+  td:nth-child(6)::before{content:"DIRECTION"}
+  td:nth-child(2)::before,td:nth-child(3)::before,td:nth-child(4)::before,
+  td:nth-child(5)::before,td:nth-child(6)::before{font-size:10px;color:var(--muted);font-weight:900}
+  td:nth-child(7){display:flex;justify-content:space-between;align-items:center;margin-top:5px;
+    padding:8px 0;border-top:1px dashed var(--line)!important}
+  td:nth-child(7)::before{content:"CALCULATED SCORE";font-size:10px;color:var(--muted);font-weight:900}
+  td:nth-child(8){position:absolute;right:22px;margin-top:-47px}
+  td input,td select{padding:9px}
+}
+@media(max-width:390px){
+  .setup-grid{grid-template-columns:1fr}
+  .actions{flex-direction:column}
+  .actions button{width:100%}
+}
+@media print{
+  body{background:#fff}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}
+  .actions,.note{display:none}.top{margin-bottom:12px}.table-wrap{overflow:visible}
+  table{min-width:0}.row-remove{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><h1>KRA Score Calculator</h1><div class="sub">Graphic Designer • Technical + Behavioral & Values</div></div>
+    <div class="badge" id="overall">Overall: —</div>
+  </div>
+
+  <div class="card">
+    <h3>Rating setup</h3>
+    <div class="grid">
+      <div><label>Technical Weight %</label><input id="tw" type="number" value="50" min="0" max="100" oninput="calc()"></div>
+      <div><label>Values Weight %</label><input id="vw" type="number" value="50" min="0" max="100" oninput="calc()"></div>
+      <div><label>Rating A starts at %</label><input id="a" type="number" value="80" oninput="calc()"></div>
+      <div><label>Rating B starts at %</label><input id="b" type="number" value="60" oninput="calc()"></div>
+      <div><label>Rating C starts at %</label><input id="c" type="number" value="40" oninput="calc()"></div>
+    </div>
+    <p class="note">The rating thresholds are editable because the screenshot does not show your company's official rating-scale page. The score formula below is a practical calculator, not a claim about the company's official formula.</p>
+  </div>
+
+  <div class="card">
+    <div class="top"><h2>Technical KRA</h2><strong id="techScore">0.00%</strong></div>
+    <table><thead><tr><th>Task</th><th>Max</th><th>Target</th><th>Min</th><th>Actual</th><th>Direction</th><th>Score</th><th></th></tr></thead>
+    <tbody id="tech"></tbody></table>
+    <div class="actions"><button class="primary" onclick="addRow('tech')">+ Add Technical KRA</button></div>
+  </div>
+
+  <div class="card">
+    <div class="top"><h2>Behavioral & Values</h2><strong id="valueScore">0.00%</strong></div>
+    <table><thead><tr><th>Value / Behaviour</th><th>Max</th><th>Target</th><th>Min</th><th>Actual</th><th>Direction</th><th>Score</th><th></th></tr></thead>
+    <tbody id="values"></tbody></table>
+    <div class="actions"><button class="primary" onclick="addRow('values')">+ Add Value</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Final Result</h2>
+    <div class="summary">
+      <div class="metric"><label>Technical KRA</label><div class="num" id="sTech">0.00%</div></div>
+      <div class="metric"><label>Behavioral & Values</label><div class="num" id="sVal">0.00%</div></div>
+      <div class="metric"><label>Overall Score</label><div class="num" id="sOverall">0.00%</div></div>
+    </div>
+    <div style="margin-top:16px"><div class="bar"><div class="fill" id="bar"></div></div></div>
+    <p class="note" id="explain"></p>
+    <div class="actions">
+      <button class="primary" onclick="exportPDF()">Export PDF – Table Format</button><button class="secondary" onclick="window.print()">Print / Save PDF</button>
+      <button class="secondary" onclick="resetData()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const techRows=[
+["Approved designs & quality per day",4,3,2,3,"positive"],
+["Creative ideas for advertising per month",4,2,1,2,"positive"],
+["WOW / innovative creatives",5,3,1,2,"positive"],
+["Content-writing spelling errors",0,0,0,0,"inverse"],
+["Client post rejection",0,0,0,0,"inverse"]
+];
+const valueRows=[
+["Punctuality – early office reporting/month without being absent",15,10,5,10,"positive"],
+["Attendance – absenteeism days/month",0,1,2,1,"inverse"],
+["Leadership – production-related issues",0,5,7,5,"inverse"],
+["Indiscipline & communication in English",3,5,7,5,"inverse"],
+["Trust, dependability & commitment",0,0,1,0,"inverse"],
+["Motivation & drive",0,0,0,0,"positive"],
+["Decision making",0,0,0,0,"positive"],
+["Learning",0,0,0,0,"positive"],
+["Accountability & responsibility",0,0,0,0,"positive"],
+["Attitude",0,0,0,0,"positive"]
+];
+
+function score(actual,target,min,max,dir){
+  actual=Number(actual);target=Number(target);min=Number(min);max=Number(max);
+  if(dir==="inverse"){
+    if(min===target) return actual<=target?100:0;
+    if(actual<=target)return 100;
+    if(actual>=min)return 0;
+    return ((min-actual)/(min-target))*100;
+  }else{
+    if(min===target) return actual>=target?100:0;
+    if(actual<=min)return 0;
+    if(actual>=target)return 100;
+    return ((actual-min)/(target-min))*100;
+  }
+}
+function rowHTML(r,i,type){
+ return `<tr>
+ <td><input value="${esc(r[0])}" oninput="calc()"></td>
+ <td><input type="number" value="${r[1]}" oninput="calc()"></td>
+ <td><input type="number" value="${r[2]}" oninput="calc()"></td>
+ <td><input type="number" value="${r[3]}" oninput="calc()"></td>
+ <td><input type="number" value="${r[4]}" oninput="calc()"></td>
+ <td><select onchange="calc()"><option value="positive" ${r[5]==="positive"?"selected":""}>Higher is better</option><option value="inverse" ${r[5]==="inverse"?"selected":""}>Lower is better</option></select></td>
+ <td class="score">0.00%</td><td><button class="danger" onclick="this.closest('tr').remove();calc()">×</button></td></tr>`;
+}
+function esc(s){return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;")}
+function render(){
+ document.getElementById("tech").innerHTML=techRows.map((r,i)=>rowHTML(r,i,"tech")).join("");
+ document.getElementById("values").innerHTML=valueRows.map((r,i)=>rowHTML(r,i,"values")).join("");
+ calc();
+}
+function addRow(type){
+ const tb=document.getElementById(type);
+ const tr=document.createElement("tr");
+ tr.innerHTML=rowHTML(["New KRA / Value",100,80,0,0,"positive"],0,type).replace(/^<tr>|<\/tr>$/g,"");
+ tb.appendChild(tr);calc();
+}
+function getScore(id){
+ const rows=[...document.querySelectorAll("#"+id+" tr")];
+ let total=0;
+ rows.forEach(tr=>{
+   const x=[...tr.querySelectorAll("input,select")];
+   const sc=score(x[4].value,x[2].value,x[3].value,x[1].value,x[5].value);
+   tr.querySelector(".score").textContent=sc.toFixed(2)+"%";
+   total+=sc;
+ });
+ return rows.length?total/rows.length:0;
+}
+function letter(p){
+ const A=Number(document.getElementById("a").value),B=Number(document.getElementById("b").value),C=Number(document.getElementById("c").value);
+ return p>=A?"A":p>=B?"B":p>=C?"C":"D";
+}
+function calc(){
+ const t=getScore("tech"),v=getScore("values");
+ let tw=Number(document.getElementById("tw").value)||0,vw=Number(document.getElementById("vw").value)||0;
+ const total=tw+vw||1, overall=(t*tw+v*vw)/total;
+ document.getElementById("techScore").textContent=t.toFixed(2)+"%";
+ document.getElementById("valueScore").textContent=v.toFixed(2)+"%";
+ document.getElementById("sTech").textContent=t.toFixed(2)+"% ("+letter(t)+")";
+ document.getElementById("sVal").textContent=v.toFixed(2)+"% ("+letter(v)+")";
+ document.getElementById("sOverall").textContent=overall.toFixed(2)+"%";
+ document.getElementById("overall").textContent="Overall: "+overall.toFixed(2)+"% ("+letter(overall)+")";
+ document.getElementById("bar").style.width=Math.max(0,Math.min(100,overall))+"%";
+ document.getElementById("explain").textContent="Current calculation uses the average of KRA-row scores, then combines Technical and Values using the weights above. 'Higher is better' treats MIN as 0% and TARGET as 100%; 'Lower is better' reverses that logic.";
+}
+function resetData(){location.reload()}
+render();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+function exportPDF(){
+  if(!window.jspdf){ alert("PDF library load nahi hui. Internet connection check karke dobara try karein."); return; }
+  calc();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+  const date=new Date().toLocaleDateString("en-IN");
+  doc.setFontSize(18); doc.setFont(undefined,"bold");
+  doc.text("KRA Performance Score Report",14,14);
+  doc.setFontSize(9); doc.setFont(undefined,"normal");
+  doc.text("Generated: "+date,14,20);
+
+  const tRows=[...document.querySelectorAll("#tech tr")].map(tr=>{
+    const x=[...tr.querySelectorAll("input,select")];
+    return [x[0].value,x[1].value,x[2].value,x[3].value,x[4].value,
+      x[5].selectedOptions[0].text,tr.querySelector(".score").textContent];
+  });
+  const vRows=[...document.querySelectorAll("#values tr")].map(tr=>{
+    const x=[...tr.querySelectorAll("input,select")];
+    return [x[0].value,x[1].value,x[2].value,x[3].value,x[4].value,
+      x[5].selectedOptions[0].text,tr.querySelector(".score").textContent];
+  });
+
+  doc.setFontSize(12); doc.setFont(undefined,"bold");
+  doc.text("Technical KRA",14,29);
+  doc.autoTable({
+    startY:33,margin:{left:14,right:14},
+    head:[["Task","Max","Target","Min","Actual","Direction","Score"]],
+    body:tRows,theme:"grid",styles:{fontSize:7,cellPadding:2},
+    headStyles:{fontSize:7,fontStyle:"bold"},columnStyles:{0:{cellWidth:75}}
+  });
+
+  let y=doc.lastAutoTable.finalY+9;
+  doc.setFontSize(12); doc.setFont(undefined,"bold");
+  doc.text("Behavioral & Values",14,y);
+  doc.autoTable({
+    startY:y+4,margin:{left:14,right:14},
+    head:[["Value / Behaviour","Max","Target","Min","Actual","Direction","Score"]],
+    body:vRows,theme:"grid",styles:{fontSize:7,cellPadding:2},
+    headStyles:{fontSize:7,fontStyle:"bold"},columnStyles:{0:{cellWidth:75}}
+  });
+
+  y=doc.lastAutoTable.finalY+9;
+  const tech=document.getElementById("sTech").textContent;
+  const val=document.getElementById("sVal").textContent;
+  const overall=document.getElementById("sOverall").textContent;
+  doc.setFontSize(11); doc.setFont(undefined,"bold");
+  doc.text("Final Result",14,y);
+  doc.setFont(undefined,"normal"); doc.setFontSize(9);
+  doc.text("Technical KRA: "+tech,14,y+6);
+  doc.text("Behavioral & Values: "+val,85,y+6);
+  doc.text("Overall Score: "+overall,175,y+6);
+
+  doc.save("KRA_Performance_Report_"+date.replaceAll("/","-")+".pdf");
+}
+</script>
+</body>
+</html>
